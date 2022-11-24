@@ -1,0 +1,67 @@
+version: '3'
+
+services:
+  zoo1:
+    image: zookeeper:3.4.10
+    hostname: zoo1
+    networks:
+      - hadoop-net
+    volumes:
+      - zoo1_data:/data
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == hadoop-namenode
+      restart_policy:
+        condition: on-failure
+    environment:
+      ZOO_MY_ID: 1
+      ZOO_SERVERS: server.1=0.0.0.0:2888:3888 server.2=zoo2:2888:3888 server.3=zoo3:2888:3888
+    ports:
+      - 2181:2181
+  zoo2:
+    image: zookeeper:3.4.10
+    hostname: zoo2
+    networks:
+      - hadoop-net
+    volumes:
+      - zoo2_data:/data
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == hadoop-datanode1
+      restart_policy:
+        condition: on-failure
+    environment:
+      ZOO_MY_ID: 2
+      ZOO_SERVERS: server.1=zoo1:2888:3888 server.2=0.0.0.0:2888:3888 server.3=zoo3:2888:3888
+    ports:
+      - 2182:2181
+  zoo3:
+    image: zookeeper:3.4.10
+    hostname: zoo3
+    networks:
+      - hadoop-net
+    volumes:
+      - zoo3_data:/data
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == hadoop-datanode2
+      restart_policy:
+        condition: on-failure
+    environment:
+      ZOO_MY_ID: 3
+      ZOO_SERVERS: server.1=zoo1:2888:3888 server.2=zoo2:2888:3888 server.3=0.0.0.0:2888:3888
+    ports:
+      - 2183:2181
+
+volumes:
+  zoo1_data:
+  zoo2_data:
+  zoo3_data:
+
+networks:
+  hadoop-net: 
+    external: 
+      name: hadoop-net

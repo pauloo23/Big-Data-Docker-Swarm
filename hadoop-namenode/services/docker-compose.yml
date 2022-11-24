@@ -1,0 +1,58 @@
+version: '3.2'
+
+services:
+  hbase-master:
+    image: pauloo23/hbase-master:1.2.6
+    hostname: hbase-master
+    networks:
+      - hadoop-net
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == hadoop-namenode
+      restart_policy:
+        condition: on-failure
+    env_file:
+      - ./hbase.env
+    ports:
+      - 16010:16010
+      - 16000:16000
+      - 6000:6000
+      - 7001:7001 
+
+  hbase-regionserver-1:
+    image: pauloo23/hbase-regionserver:1.2.6
+    hostname: hbase-regionserver-1
+    networks:
+      - hadoop-net
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == hadoop-datanode1
+      restart_policy:
+        condition: on-failure
+    env_file:
+      - ./hbase.env
+    environment:
+      HBASE_CONF_hbase_regionserver_hostname: hbase-regionserver-1
+
+  hbase-regionserver-2:
+    image: pauloo23/hbase-regionserver:1.2.6
+    hostname: hbase-regionserver-2
+    networks:
+      - hadoop-net
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == hadoop-datanode2
+      restart_policy:
+        condition: on-failure
+    env_file:
+      - ./hbase.env
+    environment:
+      HBASE_CONF_hbase_regionserver_hostname: hbase-regionserver-2
+
+networks:
+  hadoop-net:
+    external:
+      name: hadoop-net
