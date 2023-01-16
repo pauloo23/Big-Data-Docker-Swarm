@@ -1,6 +1,6 @@
+cd helpers
 curl -L https://downloads.portainer.io/ce2-16/portainer-agent-stack.yml -o portainer-agent-stack.yml
-sed -i "s/hadoop-net/hadoop-net/g" *
-sed -i "s/external:/external:/g" *
-sed -i "s/   name: hadoop-net/   name: hadoop-net/g" *
-external:
+sed -i "s/agent_network/hadoop-net/g" portainer-agent-stack.yml
+sed -i "s/driver: overlay/external:/g" portainer-agent-stack.yml
+sed -i "s/attachable: true/  name: hadoop-net/g" portainer-agent-stack.yml
 docker stack deploy -c portainer-agent-stack.yml portainer

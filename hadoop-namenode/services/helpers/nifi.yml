@@ -1,0 +1,107 @@
+version: "3.2"
+services:
+
+  nifi01:
+    image: apache/nifi:1.19.0
+    hostname: nifi01
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == hadoop-namenode
+    volumes:
+      - /data/hadoop/config:/opt/nifi/nifi-current/conf/hdp #Hadoop config folder
+      - /data/nifi/state:/opt/nifi/nifi-current/state
+      - /data/nifi/drivers:/opt/nifi/nifi-current/drivers
+      - /data/nifi/logs:/opt/nifi/nifi-current/logs
+      - /data/nifi/database_repository:/opt/nifi/nifi-current/database_repository
+      - /data/nifi/flowfile_repository:/opt/nifi/nifi-current/flowfile_repository
+      - /data/nifi/content_repository:/opt/nifi/nifi-current/content_repository
+      - /data/nifi/provenance_repository:/opt/nifi/nifi-current/provenance_repository      
+    ports:
+      - 6980:9099
+      - 9099:9099
+    networks:
+      - hadoop-net
+    environment:
+      - NIFI_WEB_HTTP_PORT=9099
+      - NIFI_CLUSTER_IS_NODE="true"
+      - NIFI_WEB_HTTP_HOST=0.0.0.0
+      - NIFI_CLUSTER_NODE_PROTOCOL_PORT=8082
+      - NIFI_ZK_CONNECT_STRING="zoo1:2181,zoo2:2181,zoo3:2181"
+      - NIFI_ELECTION_MAX_WAIT="1 min"
+      - NIFI_SENSITIVE_PROPS_KEY=testpassword
+
+  nifi02:
+    image: apache/nifi:1.19.0
+    hostname: nifi02
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == hadoop-datanode1
+    ports:
+      - 6979:9099
+    volumes:
+      - /data/hadoop/config:/opt/nifi/nifi-current/conf/hdp #Hadoop config folder
+      - /data/nifi/state:/opt/nifi/nifi-current/state
+      - /data/nifi/drivers:/opt/nifi/nifi-current/drivers
+      - /data/nifi/logs:/opt/nifi/nifi-current/logs
+      - /data/nifi/database_repository:/opt/nifi/nifi-current/database_repository
+      - /data/nifi/flowfile_repository:/opt/nifi/nifi-current/flowfile_repository
+      - /data/nifi/content_repository:/opt/nifi/nifi-current/content_repository
+      - /data/nifi/provenance_repository:/opt/nifi/nifi-current/provenance_repository 
+    networks:
+      - hadoop-net
+    environment:
+      - NIFI_WEB_HTTP_PORT=9099
+      - NIFI_WEB_HTTP_HOST=nifi01
+      - NIFI_CLUSTER_IS_NODE="true"
+      - NIFI_CLUSTER_NODE_PROTOCOL_PORT=8082
+      - NIFI_ZK_CONNECT_STRING="zoo1:2181,zoo2:2181,zoo3:2181"
+      - NIFI_ELECTION_MAX_WAIT="1 min"
+      - NIFI_SENSITIVE_PROPS_KEY=testpassword
+
+  nifi03:
+    image: apache/nifi:1.19.0
+    hostname: nifi03
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == hadoop-datanode2
+    ports:
+      - 6978:9099
+    volumes:
+      - /data/hadoop/config:/opt/nifi/nifi-current/conf/hdp #Hadoop config folder
+      - /data/nifi/state:/opt/nifi/nifi-current/state
+      - /data/nifi/drivers:/opt/nifi/nifi-current/drivers
+      - /data/nifi/logs:/opt/nifi/nifi-current/logs
+      - /data/nifi/database_repository:/opt/nifi/nifi-current/database_repository
+      - /data/nifi/flowfile_repository:/opt/nifi/nifi-current/flowfile_repository
+      - /data/nifi/content_repository:/opt/nifi/nifi-current/content_repository
+      - /data/nifi/provenance_repository:/opt/nifi/nifi-current/provenance_repository 
+    networks:
+      - hadoop-net
+    environment:
+      - NIFI_WEB_HTTP_PORT=9099
+      - NIFI_WEB_HTTP_HOST=nifi01
+      - NIFI_CLUSTER_IS_NODE="true"
+      - NIFI_CLUSTER_NODE_PROTOCOL_PORT=8082
+      - NIFI_ZK_CONNECT_STRING="zoo1:2181,zoo2:2181,zoo3:2181"
+      - NIFI_ELECTION_MAX_WAIT="1 min"
+      - NIFI_SENSITIVE_PROPS_KEY=testpassword
+
+  registry:
+    image: apache/nifi-registry 
+    hostname: registry
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == hadoop-namenode
+    volumes:
+        - /data/nifi/nifi_registry/database:/opt/nifi-registry/nifi-registry-current/database
+        - /data/nifi/nifi_registry/flow_storage:/opt/nifi-registry/nifi-registry-current/flow_storage
+    networks:
+        - hadoop-net
+networks:
+  hadoop-net:
+    external:
+      name: hadoop-net

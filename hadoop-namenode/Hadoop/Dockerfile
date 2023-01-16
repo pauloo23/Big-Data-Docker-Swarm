@@ -12,10 +12,17 @@ ENV JAVA_HOME /usr/lib/jvm/java-1.8-openjdk
 ENV PATH $PATH:$JAVA_HOME/bin
 
 # Passwordless SSH
-RUN ssh-keygen -q -N "" -t dsa -f /etc/ssh/ssh_host_dsa_key
+
+RUN ssh-keygen -q -N "" -t dsa -f /etc/ssh/ssh_host_dsa_SSey
 RUN ssh-keygen -q -N "" -t rsa -f /etc/ssh/ssh_host_rsa_key
 RUN ssh-keygen -q -N "" -t rsa -f /root/.ssh/id_rsa
 RUN cp /root/.ssh/id_rsa.pub /root/.ssh/authorized_keys
+
+RUN chmod 700 ~/.ssh/ 
+RUN chmod 600 ~/.ssh/*
+RUN chown -R root ~/.ssh/
+RUN chgrp -R root ~/.ssh/
+RUN chmod -R 750 /root/.ssh/authorized_keys
 
 ADD ssh_config /root/.ssh/config
 RUN chmod 600 /root/.ssh/config

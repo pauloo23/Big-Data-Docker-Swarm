@@ -1,8 +1,6 @@
 #Pull docker image
 docker pull pauloo23/hadoop:2.7.4
 
-#Delete data dir 
-rm -rf /data
 #Create dir /data
 mkdir -p /data
 chmod 777 /data
@@ -22,6 +20,8 @@ chmod 777 -R /data
 
  # Use subversion to download config files from github 
 svn export https://github.com/pauloo23/Dockerfiles/trunk/hadoop/2.9.1/config /data/hadoop/config --force
+
+
 
 #Bring up all the nodes
 
@@ -131,4 +131,3 @@ docker service create \
         --env LOCAL_PORT=50075  \
         --publish mode=host,published=50075,target=50075  \
         newnius/port-forward
-

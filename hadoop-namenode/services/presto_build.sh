@@ -30,4 +30,4 @@ docker service create \
     --constraint node.hostname==hadoop-datanode2 \
     -p 8083:8082 \
 	--replicas 1 \
-	pauloo23/presto-worker1:0.251 
+	pauloo23/presto-worker2:0.251 

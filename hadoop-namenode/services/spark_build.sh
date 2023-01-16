@@ -1,6 +1,6 @@
 
 # Create a docker overlay network called hadoop-net
-docker pull pauloo23/pyspark-notebook:2.4.5
+docker pull pauloo23/pyspark-notebook:3.3.1
 mkdir /jupyter-pyspark
 mkdir /jupyter-pyspark/work
 chmod 777 -R /jupyter-pyspark
@@ -18,8 +18,22 @@ docker service create \
   --replicas 1 \
   --detach=true \
   --mount type=bind,source=/etc/localtime,target=/etc/localtime \
-  --mount type=bind,source=/data/hadoop/config,target=/config/hadoop \
-  pauloo23/pyspark-notebook:2.4.5 bin/spark-class org.apache.spark.deploy.master.Master
+  --mount type=bind,source=/data/hive/conf,target=/usr/spark-3.3.1/conf \
+  pauloo23/pyspark-notebook:3.3.1 bin/spark-class org.apache.spark.deploy.master.Master
+
+##sparkHistory 
+
+docker service create \
+  --name spark-history-server \
+  --hostname spark-history-server \
+  --constraint node.hostname==hadoop-namenode \
+  --network hadoop-net \
+  --replicas 1 \
+  --detach=true \
+  --mount type=bind,source=/etc/localtime,target=/etc/localtime \
+  --mount type=bind,source=/data/hive/conf,target=/usr/spark-3.3.1/conf \
+  pauloo23/pyspark-notebook:3.3.1 bin/spark-class org.apache.spark.deploy.history.HistoryServer
+
 
 #worker1
 docker service create \
@@ -31,8 +45,8 @@ docker service create \
   --replicas 1 \
   --detach=true \
   --mount type=bind,source=/etc/localtime,target=/etc/localtime \
-  --mount type=bind,source=/data/hadoop/config,target=/config/hadoop \
-  pauloo23/pyspark-notebook:2.4.5 bin/spark-class org.apache.spark.deploy.worker.Worker spark://sparkmaster:7077
+  --mount type=bind,source=/data/hive/conf,target=/usr/spark-3.3.1/conf \
+  pauloo23/pyspark-notebook:3.3.1  bin/spark-class org.apache.spark.deploy.worker.Worker spark://sparkmaster:7077
 
 #worker2 
 docker service create \
@@ -43,8 +57,8 @@ docker service create \
   --detach=true \
   --replicas 1 \
   --mount type=bind,source=/etc/localtime,target=/etc/localtime \
-  --mount type=bind,source=/data/hadoop/config,target=/config/hadoop \
-  pauloo23/pyspark-notebook:2.4.5 bin/spark-class org.apache.spark.deploy.worker.Worker spark://sparkmaster:7077
+  --mount type=bind,source=/data/hive/conf,target=/usr/spark-3.3.1/conf \
+  pauloo23/pyspark-notebook:3.3.1  bin/spark-class org.apache.spark.deploy.worker.Worker spark://sparkmaster:7077
 
 #worker3
 docker service create \
@@ -55,8 +69,8 @@ docker service create \
   --detach=true \
   --replicas 1 \
   --mount type=bind,source=/etc/localtime,target=/etc/localtime \
-  --mount type=bind,source=/data/hadoop/config,target=/config/hadoop \
-  pauloo23/pyspark-notebook:2.4.5 bin/spark-class org.apache.spark.deploy.worker.Worker spark://sparkmaster:7077
+  --mount type=bind,source=/data/hive/conf,target=/usr/spark-3.3.1/conf \
+  pauloo23/pyspark-notebook:3.3.1  bin/spark-class org.apache.spark.deploy.worker.Worker spark://sparkmaster:7077
 
 #Jupyterlab 
 docker service create \
@@ -67,10 +81,9 @@ docker service create \
   --detach=true \
   --replicas 1 \
   --mount type=bind,source=/etc/localtime,target=/etc/localtime \
-  --mount type=bind,source=/data/hadoop/config,target=/config/hadoop \
-  --mount type=bind,source=/jupyter-pyspark/work,target=/usr/spark-2.4.5/work \
-  pauloo23/pyspark-notebook:2.4.5 jupyter lab --ip=0.0.0.0 --port=8888 --allow-root --NotebookApp.token='' --NotebookApp.password=''
-
+  --mount type=bind,source=/data/hive/conf,target=/usr/spark-3.3.1/conf \
+  --mount type=bind,source=/jupyter-pyspark/work,target=/usr/spark-3.3.1/work \
+  pauloo23/pyspark-notebook:3.3.1 jupyter-lab --ip=0.0.0.0 --port=8888 --allow-root --NotebookApp.token='' --NotebookApp.password=''
 
 ##EXPOSE INTERFACES
 
@@ -84,6 +97,8 @@ docker service create \
         --publish mode=host,published=8080,target=8080 \
         newnius/port-forward
 
+
+
 docker service create \
         --name spark-master-forwarder \
         --constraint node.hostname==hadoop-namenode \
@@ -93,6 +108,7 @@ docker service create \
         --env LOCAL_PORT=7077 \
         --publish mode=host,published=7077,target=7077 \
         newnius/port-forward
+
 
 docker service create \
         --name spark-worker1-forwarder \
@@ -123,7 +139,6 @@ docker service create \
         --env LOCAL_PORT=8081 \
         --publish mode=host,published=8081,target=8081 \
         newnius/port-forward
-
 
 
 docker service create \

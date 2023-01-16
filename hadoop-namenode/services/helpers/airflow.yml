@@ -1,0 +1,93 @@
+version: '3.5'
+services:
+  redis:
+    image: redis:4
+    networks:
+      - hadoop-net
+
+  db:
+    image: postgres:13
+    hostname: db
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=airflow
+      - POSTGRES_PASSWORD=airflow
+      - POSTGRES_DB=airflow
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == hadoop-namenode
+    networks:
+      - hadoop-net
+
+  
+  pgadmin4:
+    image: dpage/pgadmin4
+    restart: always
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@email.com
+      - PGADMIN_DEFAULT_PASSWORD=postgres
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == hadoop-namenode
+    networks:
+      - hadoop-net
+    ports:
+      - "15432:80"
+
+  initdb:
+    image: pauloo23/airflow-spark:2.5.0
+    command: ["airflow", "db", "init"]
+    depends_on:
+      - db
+    networks:
+      - hadoop-net
+    env_file:
+      - env/airflow.env
+
+  webserver:
+    image: pauloo23/airflow-spark:2.5.0
+    hostname: airflow-webserver
+    command: ["airflow", "webserver", "--port", "9999"]
+    volumes:
+      - /data/airflow/dags:/home/airflow/dags #DAG folder
+      - /data/airflow/logs:/home/airflow/logs #LOGS folder
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == hadoop-namenode
+    ports:
+      - "9999:9999"
+    env_file:
+      - env/airflow.env
+    networks:
+      - hadoop-net
+    depends_on:
+      - initdb
+
+  scheduler:
+    image: pauloo23/airflow-spark:2.5.0
+    hostname: airflow-scheduler
+    command: ["airflow", "scheduler"]
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == hadoop-namenode
+    volumes:
+      - /data/airflow/dags:/home/airflow/dags #DAG folder
+      - /data/airflow/logs:/home/airflow/logs #LOGS folder
+    networks:
+      - hadoop-net
+    env_file:
+      - env/airflow.env
+    depends_on:
+      - initdb
+
+  
+networks:
+  hadoop-net:
+    external:
+      name: hadoop-net

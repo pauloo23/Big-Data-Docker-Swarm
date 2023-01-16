@@ -1,0 +1,117 @@
+version: '3.2'
+services:
+  redis:
+    image: redis:4
+    networks:
+      - hadoop-net
+
+  db:
+    image: postgres:9.6
+    hostname: db
+    restart: always
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == hadoop-namenode
+    networks:
+      - hadoop-net
+    env_file:
+      - env/postgres.env
+  
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 5000:8080
+
+  initdb:
+    image: pauloo23/airflow-spark:2.2.5
+    command: ["sh/wait-for-postgres.sh", "db", "airflow", "db", "init"]
+    depends_on:
+      - db
+    networks:
+      - hadoop-net
+    env_file:
+      - env/airflow.env
+
+  webserver:
+    image: pauloo23/airflow-spark:2.2.5
+    hostname: airflow-webserver
+    command: ["sh/wait-for-migrations.sh", "db", "airflow", "webserver", "--port", "9999"]
+    volumes:
+      - /data/airflow/dags:/home/airflow/dags #DAG folder
+      - /data/airflow/logs:/home/airflow/logs #LOGS folder
+
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == hadoop-namenode
+    ports:
+      - "9999:9999"
+    env_file:
+      - env/airflow.env
+    networks:
+      - hadoop-net
+    depends_on:
+      - initdb
+
+  scheduler:
+    image: pauloo23/airflow-spark:2.2.5
+    hostname: airflow-scheduler
+    command: ["sh/wait-for-migrations.sh", "db", "airflow", "scheduler"]
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == hadoop-namenode
+    volumes:
+      - /data/airflow/dags:/home/airflow/dags #DAG folder
+      - /data/airflow/logs:/home/airflow/logs #LOGS folder
+    networks:
+      - hadoop-net
+    env_file:
+      - env/airflow.env
+    depends_on:
+      - initdb
+
+  worker0:
+    image:  pauloo23/airflow-spark:2.2.5
+    hostname: airflow-worker0
+    volumes:
+      - /data/airflow/dags:/home/airflow/dags #DAG folder
+      - /data/airflow/logs:/home/airflow/logs #LOGS folder
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == hadoop-datanode1    
+    command: bash -c "airflow celery worker"
+    networks:
+      - hadoop-net
+    env_file:
+      - env/airflow.env
+    depends_on:
+      - initdb
+      - redis
+
+  worker1:
+    image:  pauloo23/airflow-spark:2.2.5
+    hostname: airflow-worker1
+    volumes:
+      - /data/airflow/dags:/home/airflow/dags #DAG folder
+      - /data/airflow/logs:/home/airflow/logs #LOGS folder
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == hadoop-datanode2
+    command: bash -c "airflow celery worker"
+    networks:
+      - hadoop-net
+    env_file:
+      - env/airflow.env
+    depends_on:
+      - initdb
+      - redis
+
+networks:
+  hadoop-net:
+    external:
+      name: hadoop-net

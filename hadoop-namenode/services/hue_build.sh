@@ -3,6 +3,9 @@ mkdir /data/hue
 chmod 777 -R /data/hue
 cd /data/hue
 docker exec -it mysql.1.$(docker service ps \
+mysql --no-trunc | grep Running | awk '{print $1}' ) mysql -u root -p123456 -e "drop database if exists hue;"
+
+docker exec -it mysql.1.$(docker service ps \
 mysql --no-trunc | grep Running | awk '{print $1}' ) mysql -u root -p123456 -e "create database hue;"
 
 echo "
@@ -11,7 +14,7 @@ echo "
   http_port=8899
   time_zone=Europe/Lisbon
   dev=true
-  app_blacklist=zookeeper,oozie,hbase,security,search,impala
+#  app_blacklist=zookeeper,oozie,hbase,security,search,impala
   [[database]]
     engine=mysql
     host=mysql
