@@ -20,19 +20,19 @@
    </property>
    <property>
       <name>yarn.resourcemanager.hostname</name>
-      <value>hadoop-resource-manager</value>
+      <value>hadoop-resourcemanager</value>
    </property>
    <property>
       <name>yarn.resourcemanager.address</name>
-      <value>hadoop-resource-manager:8032</value>
+      <value>hadoop-resourcemanager:8032</value>
    </property>
    <property>
       <name>yarn.resourcemanager.scheduler.address</name>
-      <value>hadoop-resource-manager:8030</value>
+      <value>hadoop-resourcemanager:8030</value>
    </property>
    <property>
       <name>yarn.resourcemanager.resource-tracker.address</name>
-      <value>hadoop-resource-manager:8031</value>
+      <value>hadoop-resourcemanager:8031</value>
    </property>
    <property>
       <name>yarn.timeline-service.enabled</name>
