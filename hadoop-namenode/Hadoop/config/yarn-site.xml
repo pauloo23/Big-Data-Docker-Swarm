@@ -27,6 +27,10 @@
       <value>hadoop-resourcemanager:8032</value>
    </property>
    <property>
+    <name>yarn.resourcemanager.webapp.address</name>
+    <value>hadoop-resourcemanager:8088</value>
+  </property>
+   <property>
       <name>yarn.resourcemanager.scheduler.address</name>
       <value>hadoop-resourcemanager:8030</value>
    </property>
@@ -67,12 +71,11 @@
       <value>1024</value>
    </property>
    <property>
+    <name>yarn.nodemanager.hostname</name>
+    <value>hadoop-nodemanager1</value>
+  </property>
+   <property>
       <name>yarn.nodemanager.vmem-pmem-ratio</name>
       <value>5</value>
-   </property>
-   <property>
-      <description>The http address of the RM web application.</description>
-      <name>yarn.resourcemanager.webapp.address</name>
-      <value>${yarn.resourcemanager.hostname}:8088</value>
    </property>
 </configuration>
